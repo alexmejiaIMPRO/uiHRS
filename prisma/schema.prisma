@@ -1,0 +1,106 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id              Int             @id @default(autoincrement())
+  employeeId      String          @unique
+  name            String
+  payrollNumber   Int             @unique
+  email           String?         @unique
+  phone           String?
+  hireDate        DateTime
+  dailySalary     Float
+  shift           String?
+  transportType   String?
+  collarType      CollarType
+  isActive        Boolean         @default(true)
+  plantId         Int
+  departmentId    Int
+  positionId      Int?
+  
+  // Relations
+  plant       Plant       @relation(fields: [plantId], references: [id])
+  department  Department  @relation(fields: [departmentId], references: [id])
+  position    Position?   @relation(fields: [positionId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Position {
+  id          Int        @id @default(autoincrement())
+  title       String     @unique
+  description String?
+  departmentId Int
+  baseSalary  Float
+  isActive    Boolean    @default(true)
+  
+  // Relations
+  department  Department @relation(fields: [departmentId], references: [id])
+  employees   Employee[]
+  applicants  Applicant[] // Added relation to applicants
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Applicant {
+  id              Int      @id @default(autoincrement())
+  name            String
+  email           String   @unique
+  phone           String
+  positionId      Int
+  status          ApplicationStatus @default(PENDING)
+  experience      Int      @default(0)
+  education       String
+  applicationDate DateTime
+  resume          String?
+  notes           String?
+  
+  // Relations
+  position        Position @relation(fields: [positionId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Plant {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  employees Employee[]
+}
+
+model Department {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  employees Employee[]
+  positions Position[]
+}
+
+enum CollarType {
+  BLUE
+  WHITE
+  GRAY
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  HR
+  PAYROLL
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
